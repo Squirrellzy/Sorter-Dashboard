@@ -15,38 +15,28 @@ def load_excel_data(location_name, file_name):
         return None, None
 
 def prepare_weekly_summary(weekly_df):
-    # Drop any extra columns
     weekly_df = weekly_df.loc[:, ["Week", "Strands", "Pass/Fail"]].copy()
-
-    # Clean data
     weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
     weekly_df["Strands"] = weekly_df["Strands"].astype(str).str.strip()
     weekly_df["Pass/Fail"] = weekly_df["Pass/Fail"].astype(str).str.strip().str.title()
-
     return weekly_df[["Week", "Strands", "Pass/Fail"]]
 
 def style_weekly_summary(df):
     styles = pd.DataFrame("", index=df.index, columns=df.columns)
     for i in df.index:
         val = df.loc[i, "Pass/Fail"]
-        if val.lower() == "pass":
+        if isinstance(val, str) and val.lower() == "pass":
             styles.loc[i, "Pass/Fail"] = "background-color: lightgreen"
-        elif val.lower() == "fail":
+        elif isinstance(val, str) and val.lower() == "fail":
             styles.loc[i, "Pass/Fail"] = "background-color: lightcoral"
     return styles
 
 def prepare_weekly_heatmap(weekly_df):
-    weekly_df = weekly_df.loc[:, ~weekly_df.columns.str.contains("^Unnamed")]
-    week_col = weekly_df.columns[0]
-    strand_col = weekly_df.columns[1]
-    weekly_counts = (
-        weekly_df.groupby(week_col)[strand_col]
-        .nunique()
-        .reset_index()
-        .rename(columns={strand_col: "Unique Strands"})
-    )
-    weekly_counts["Pass/Fail"] = weekly_counts["Unique Strands"].apply(lambda x: "Pass" if x == 8 else "Fail")
-    heatmap_df = weekly_counts.pivot(index="Pass/Fail", columns=week_col, values="Pass/Fail").fillna("Fail")
+    weekly_df = weekly_df.loc[:, ["Week", "Pass/Fail"]].copy()
+    weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
+    weekly_df["Pass/Fail"] = weekly_df["Pass/Fail"].astype(str).str.strip().str.title()
+    weekly_df = weekly_df.drop_duplicates()
+    heatmap_df = weekly_df.pivot(index="Pass/Fail", columns="Week", values="Pass/Fail").fillna("Fail")
     heatmap_df = heatmap_df[sorted(heatmap_df.columns, reverse=True)]
     return heatmap_df
 
@@ -91,9 +81,9 @@ def style_weekly_heatmap(df):
     for row in df.index:
         for col in df.columns:
             val = df.loc[row, col]
-            if val == "Pass":
+            if isinstance(val, str) and val.lower() == "pass":
                 styles.loc[row, col] = "background-color: lightgreen"
-            elif val == "Fail":
+            elif isinstance(val, str) and val.lower() == "fail":
                 styles.loc[row, col] = "background-color: lightcoral"
     return styles
 
