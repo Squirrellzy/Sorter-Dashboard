@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -26,6 +25,15 @@ def prepare_weekly_summary(weekly_df):
 
     return weekly_df[["Week", "Strands", "Pass/Fail"]]
 
+def style_weekly_summary(df):
+    styles = pd.DataFrame("", index=df.index, columns=df.columns)
+    for i in df.index:
+        val = df.loc[i, "Pass/Fail"]
+        if val.lower() == "pass":
+            styles.loc[i, "Pass/Fail"] = "background-color: lightgreen"
+        elif val.lower() == "fail":
+            styles.loc[i, "Pass/Fail"] = "background-color: lightcoral"
+    return styles
 
 def prepare_weekly_heatmap(weekly_df):
     weekly_df = weekly_df.loc[:, ~weekly_df.columns.str.contains("^Unnamed")]
@@ -110,7 +118,7 @@ if weekly_df is not None and daily_df is not None:
 
     st.header("📋 Weekly Overview")
     weekly_detailed = prepare_weekly_summary(weekly_df)
-    st.dataframe(weekly_detailed)
+    st.dataframe(weekly_detailed.style.apply(style_weekly_summary, axis=None))
     st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
 
     st.header("📅 Daily Inspection Log")
