@@ -17,16 +17,28 @@ def load_excel_data(location_name, file_name):
 
 def prepare_weekly_summary(weekly_df):
     weekly_df = weekly_df.loc[:, ~weekly_df.columns.str.contains("^Unnamed")]
+    
     week_col = weekly_df.columns[0]
     strand_col = weekly_df.columns[1]
+    
+    # Normalize strand names
+    weekly_df[strand_col] = weekly_df[strand_col].astype(str).str.strip().str.lower()
     expected_strands = {f"strand {i}" for i in range(1, 9)}
-# Normalize strand names
-weekly_df[strand_col] = weekly_df[strand_col].astype(str).str.strip().str.lower()
-# Group and check if all expected strands are found
-grouped = weekly_df.groupby(week_col)[strand_col].apply(set).reset_index()
-grouped["Pass/Fail"] = grouped[strand_col].apply(
-    lambda found: "Pass" if expected_strands.issubset(found) else "Fail"
-)
+
+    # Group strands by week
+    grouped = weekly_df.groupby(week_col)[strand_col].apply(set).reset_index()
+    grouped.rename(columns={strand_col: "Strands"}, inplace=True)
+
+    # Compare against expected full set
+    grouped["Pass/Fail"] = grouped["Strands"].apply(
+        lambda found: "Pass" if expected_strands.issubset(found) else "Fail"
+    )
+
+    # Explode strands for display
+    exploded = grouped.explode("Strands").rename(columns={"Strands": "Strand"})
+    exploded["Week"] = exploded[week_col]
+    return exploded[["Week", "Strand", "Pass/Fail"]]
+    
 def prepare_weekly_heatmap(weekly_df):
     weekly_df = weekly_df.loc[:, ~weekly_df.columns.str.contains("^Unnamed")]
     week_col = weekly_df.columns[0]
