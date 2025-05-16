@@ -16,22 +16,17 @@ def load_excel_data(location_name, file_name):
         return None, None
 
 def prepare_weekly_summary(weekly_df):
-    weekly_df = weekly_df.loc[:, ["Week", "Strand"]].copy()
-    
-    # Clean strand lists and explode
-    weekly_df["Strand"] = weekly_df["Strand"].astype(str).str.lower().str.strip()
-    weekly_df["Strand"] = weekly_df["Strand"].str.split(",\\s*")  # split into lists
-    exploded = weekly_df.explode("Strand")
-    
-    # Trim whitespace and re-title strands
-    exploded["Strand"] = exploded["Strand"].str.strip().str.title()
-    
-    # Group by week and validate expected set
-    expected = {f"Strand {i}" for i in range(1, 9)}
-    summary = exploded.groupby("Week")["Strand"].apply(set).reset_index()
-    summary["Pass/Fail"] = summary["Strand"].apply(lambda s: "Pass" if expected.issubset(s) else "Fail")
-    
-    exploded = exploded.merge(summary[["Week", "Pass/Fail"]], on="Week")
+    # Normalize column names
+    weekly_df.columns = [col.strip().lower() for col in weekly_df.columns]
+    weekly_df = weekly_df.rename(columns={"week": "Week", "strands": "Strands", "pass/fail": "Pass/Fail"})
+
+    # Split strands into individual rows
+    weekly_df["Strands"] = weekly_df["Strands"].astype(str).str.split(",\\s*")
+    exploded = weekly_df.explode("Strands")
+
+    # Clean strand names
+    exploded["Strand"] = exploded["Strands"].str.strip().str.title()
+
     return exploded[["Week", "Strand", "Pass/Fail"]]
 
 def prepare_weekly_heatmap(weekly_df):
