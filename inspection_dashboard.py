@@ -89,7 +89,6 @@ def style_weekly_heatmap(df):
 
 # --- UI ---
 st.title("📊 Sorter Inspection Dashboard")
-st.caption("✅ GitHub/Streamlit Deployable")
 
 locations = {
     "Indy": "Sorter Inspection Validation Indy.xlsx",
@@ -102,16 +101,16 @@ file_name = locations[site_choice]
 weekly_df, daily_df = load_excel_data(site_choice, file_name)
 
 if weekly_df is not None and daily_df is not None:
-    st.header("📊 Weekly Pass/Fail Heatmap")
+    st.header("📊 Weekly Pass/Fail")
     heatmap_df = prepare_weekly_heatmap(weekly_df)
     st.dataframe(heatmap_df.style.apply(style_weekly_heatmap, axis=None))
     st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
 
-    st.header("📋 Weekly Overview (Week, Strand, Pass/Fail)")
+    st.header("📋 Weekly Overview")
     weekly_detailed = prepare_weekly_summary(weekly_df)
     st.dataframe(weekly_detailed)
 
-    st.header("📅 Daily Inspection Log (Display hr:min:sec with color by minutes)")
+    st.header("📅 Daily Inspection Log")
     text_pivot, numeric_pivot = prepare_daily_log(daily_df)
     styled = text_pivot.style.apply(lambda _: highlight_by_minutes(numeric_pivot), axis=None)
     st.dataframe(styled)
