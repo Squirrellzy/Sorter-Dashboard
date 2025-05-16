@@ -88,7 +88,7 @@ def style_weekly_heatmap(df):
     return styles
 
 # --- UI ---
-st.title("📊 Sorter Inspection Dashboard")
+st.title("Sorter Inspection Dashboard")
 
 locations = {
     "Indy": "Sorter Inspection Validation Indy.xlsx",
@@ -109,6 +109,7 @@ if weekly_df is not None and daily_df is not None:
     st.header("📋 Weekly Overview")
     weekly_detailed = prepare_weekly_summary(weekly_df)
     st.dataframe(weekly_detailed)
+    st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
 
     st.header("📅 Daily Inspection Log")
     text_pivot, numeric_pivot = prepare_daily_log(daily_df)
