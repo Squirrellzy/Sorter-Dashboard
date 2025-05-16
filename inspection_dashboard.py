@@ -16,15 +16,15 @@ def load_excel_data(location_name, file_name):
         return None, None
 
 def prepare_weekly_summary(weekly_df):
-    # Drop any unnamed index column
-    weekly_df = weekly_df.loc[:, ~weekly_df.columns.str.contains("unnamed", case=False)]
+    # Drop any extra columns
+    weekly_df = weekly_df.loc[:, ["Week", "Strands", "Pass/Fail"]].copy()
 
-    # Clean up strands
-    weekly_df["Strand"] = weekly_df["Strand"].astype(str).str.strip().str.title()
+    # Clean data
     weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
+    weekly_df["Strands"] = weekly_df["Strands"].astype(str).str.strip()
     weekly_df["Pass/Fail"] = weekly_df["Pass/Fail"].astype(str).str.strip().str.title()
 
-    return weekly_df[["Week", "Strand", "Pass/Fail"]]
+    return weekly_df[["Week", "Strands", "Pass/Fail"]]
 
 
 def prepare_weekly_heatmap(weekly_df):
