@@ -19,12 +19,14 @@ def prepare_weekly_summary(weekly_df):
     weekly_df = weekly_df.loc[:, ~weekly_df.columns.str.contains("^Unnamed")]
     week_col = weekly_df.columns[0]
     strand_col = weekly_df.columns[1]
-    grouped = weekly_df.groupby(week_col)[strand_col].apply(lambda x: list(sorted(set(x)))).reset_index()
-    grouped["Pass/Fail"] = grouped[strand_col].apply(lambda strands: "Pass" if len(set(strands)) == 8 else "Fail")
-    exploded = grouped.explode(strand_col).rename(columns={strand_col: "Strand"})
-    exploded["Week"] = exploded[week_col]
-    return exploded[["Week", "Strand", "Pass/Fail"]]
-
+    expected_strands = {f"strand {i}" for i in range(1, 9)}
+# Normalize strand names
+weekly_df[strand_col] = weekly_df[strand_col].astype(str).str.strip().str.lower()
+# Group and check if all expected strands are found
+grouped = weekly_df.groupby(week_col)[strand_col].apply(set).reset_index()
+grouped["Pass/Fail"] = grouped[strand_col].apply(
+    lambda found: "Pass" if expected_strands.issubset(found) else "Fail"
+)
 def prepare_weekly_heatmap(weekly_df):
     weekly_df = weekly_df.loc[:, ~weekly_df.columns.str.contains("^Unnamed")]
     week_col = weekly_df.columns[0]
