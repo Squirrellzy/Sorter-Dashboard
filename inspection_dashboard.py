@@ -27,7 +27,7 @@ def prepare_weekly_summary(weekly_df):
     exploded["Strand"] = exploded["Strand"].str.strip().str.title()
     
     # Group by week and validate expected set
-    expected = {f"Strand {i}" for i in range(1, 8)}
+    expected = {f"Strand {i}" for i in range(1, 9)}
     summary = exploded.groupby("Week")["Strand"].apply(set).reset_index()
     summary["Pass/Fail"] = summary["Strand"].apply(lambda s: "Pass" if expected.issubset(s) else "Fail")
     
