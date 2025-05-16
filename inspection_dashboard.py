@@ -16,18 +16,16 @@ def load_excel_data(location_name, file_name):
         return None, None
 
 def prepare_weekly_summary(weekly_df):
-    # Normalize column names
-    weekly_df.columns = [col.strip().lower() for col in weekly_df.columns]
-    weekly_df = weekly_df.rename(columns={"week": "Week", "strands": "Strands", "pass/fail": "Pass/Fail"})
+    # Drop any unnamed index column
+    weekly_df = weekly_df.loc[:, ~weekly_df.columns.str.contains("unnamed", case=False)]
 
-    # Split strands into individual rows
-    weekly_df["Strands"] = weekly_df["Strands"].astype(str).str.split(",\\s*")
-    exploded = weekly_df.explode("Strands")
+    # Clean up strands
+    weekly_df["Strand"] = weekly_df["Strand"].astype(str).str.strip().str.title()
+    weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
+    weekly_df["Pass/Fail"] = weekly_df["Pass/Fail"].astype(str).str.strip().str.title()
 
-    # Clean strand names
-    exploded["Strand"] = exploded["Strands"].str.strip().str.title()
+    return weekly_df[["Week", "Strand", "Pass/Fail"]]
 
-    return exploded[["Week", "Strand", "Pass/Fail"]]
 
 def prepare_weekly_heatmap(weekly_df):
     weekly_df = weekly_df.loc[:, ~weekly_df.columns.str.contains("^Unnamed")]
