@@ -78,13 +78,12 @@ def highlight_by_minutes(minutes_df):
 
 def style_weekly_heatmap(df):
     styles = pd.DataFrame("", index=df.index, columns=df.columns)
-    for row in df.index:
-        for col in df.columns:
-            val = df.loc[row, col]
-            if isinstance(val, str) and val.lower() == "pass":
-                styles.loc[row, col] = "background-color: lightgreen"
-            elif isinstance(val, str) and val.lower() == "fail":
-                styles.loc[row, col] = "background-color: lightcoral"
+    for col in df.columns:
+        val = df.iloc[0][col]
+        if isinstance(val, str) and val.lower() == "pass":
+            styles.iloc[0][col] = "background-color: lightgreen"
+        elif isinstance(val, str) and val.lower() == "fail":
+            styles.iloc[0][col] = "background-color: lightcoral"
     return styles
 
 # --- UI ---
