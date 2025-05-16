@@ -35,9 +35,9 @@ def prepare_weekly_heatmap(weekly_df):
     weekly_df = weekly_df.loc[:, ["Week", "Pass/Fail"]].copy()
     weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
     weekly_df["Pass/Fail"] = weekly_df["Pass/Fail"].astype(str).str.strip().str.title()
-    weekly_df = weekly_df.drop_duplicates()
-    heatmap_df = weekly_df.pivot(index="Pass/Fail", columns="Week", values="Pass/Fail").fillna("Fail")
-    heatmap_df = heatmap_df[sorted(heatmap_df.columns, reverse=True)]
+    weekly_df = weekly_df.drop_duplicates(subset="Week")
+    weekly_df = weekly_df.sort_values(by="Week", ascending=False)
+    heatmap_df = pd.DataFrame([weekly_df.set_index("Week")["Pass/Fail"]])
     return heatmap_df
 
 def convert_time_to_minutes(time_str):
