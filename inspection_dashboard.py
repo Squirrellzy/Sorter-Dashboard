@@ -15,7 +15,8 @@ def load_excel_data(location_name, file_name):
         return None, None
 
 def prepare_weekly_summary(weekly_df):
-    weekly_df = weekly_df.loc[:, ["Week", "Strands", "Pass/Fail"]].copy()
+    weekly_df = weekly_df.loc[:, ["Week Range", "Strands Completed", "All 8 Present"]].copy()
+    weekly_df.columns = ["Week", "Strands", "Pass/Fail"]
     weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
     weekly_df["Strands"] = weekly_df["Strands"].astype(str).str.strip()
     weekly_df["Pass/Fail"] = weekly_df["Pass/Fail"].astype(str).str.strip().str.title()
@@ -32,12 +33,14 @@ def style_weekly_summary(df):
     return styles
 
 def prepare_weekly_heatmap(weekly_df):
-    weekly_df = weekly_df.loc[:, ["Week", "Pass/Fail"]].copy()
+    weekly_df = weekly_df.loc[:, ["Week Range", "All 8 Present"]].copy()
+    weekly_df.columns = ["Week", "Pass/Fail"]
     weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
     weekly_df["Pass/Fail"] = weekly_df["Pass/Fail"].astype(str).str.strip().str.title()
     weekly_df = weekly_df.drop_duplicates(subset="Week")
     weekly_df = weekly_df.sort_values(by="Week", ascending=False)
     heatmap_df = pd.DataFrame([weekly_df.set_index("Week")["Pass/Fail"]])
+    heatmap_df.index = ["Status"]
     return heatmap_df
 
 def convert_time_to_minutes(time_str):
@@ -78,12 +81,13 @@ def highlight_by_minutes(minutes_df):
 
 def style_weekly_heatmap(df):
     styles = pd.DataFrame("", index=df.index, columns=df.columns)
-    for col in df.columns:
-        val = df.iloc[0][col]
-        if isinstance(val, str) and val.lower() == "pass":
-            styles.iloc[0][col] = "background-color: lightgreen"
-        elif isinstance(val, str) and val.lower() == "fail":
-            styles.iloc[0][col] = "background-color: lightcoral"
+    for row in df.index:
+        for col in df.columns:
+            val = df.loc[row, col]
+            if isinstance(val, str) and val.lower() == "pass":
+                styles.loc[row, col] = "background-color: lightgreen"
+            elif isinstance(val, str) and val.lower() == "fail":
+                styles.loc[row, col] = "background-color: lightcoral"
     return styles
 
 # --- UI ---
