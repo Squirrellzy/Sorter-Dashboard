@@ -1,54 +1,182 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import os
 import base64
+import os
+import sqlite3
+import pyAesCrypt
+import requests
+from passlib.hash import bcrypt
+from datetime import datetime
 
-#set page layout
-st.set_page_config(layout="wide")
-
-# Load and encode the logo image
-logo_path = "data/logo.png"
-with open(logo_path, "rb") as f:
-    logo_data = f.read()
-    logo_base64 = base64.b64encode(logo_data).decode()
-
-# User-role mapping
-USER_CREDENTIALS = {
-    "admin": {"password": "retadmin", "site": "all"},
-    "indy": {"password": "mars", "site": "Indy"},
-    "atlanta": {"password": "mars", "site": "Atlanta"},
-    "chicago": {"password": "mars", "site": "Chicago"},
+# Mapping of site to Excel filenames
+SITE_FILES = {
+    "Indy": "Sorter Inspection Validation Indy.xlsx",
+    "Chicago": "Sorter Inspection Validation Chicago.xlsx",
+    "Atlanta": "Sorter Inspection Validation Atlanta.xlsx"
 }
 
-# Initialize session state variables if not already set
+# --- CONFIG ---
+st.set_page_config(layout="wide")
+
+ENCRYPTED_DB_PATH = "user_auth.db.aes"
+DECRYPTED_DB_PATH = "/tmp/user_auth.db"
+DB_PATH = DECRYPTED_DB_PATH
+BUFFER_SIZE = 64 * 1024
+
+ENCRYPTION_KEY = st.secrets["auth"]["encryption_key"]
+GITHUB_TOKEN = st.secrets["auth"]["github_token"]
+GITHUB_REPO = st.secrets["auth"]["github_repo"]
+GITHUB_BRANCH = st.secrets["auth"].get("github_branch", "main")
+ALLOWED_DOMAIN = st.secrets["auth"]["allowed_domain"]
+
+# --- ENCRYPTION ---
+def encrypt_db(input_file, output_file, password):
+    pyAesCrypt.encryptFile(input_file, output_file, password, BUFFER_SIZE)
+
+def decrypt_db(input_file, output_file, password):
+    try:
+        pyAesCrypt.decryptFile(input_file, output_file, password, BUFFER_SIZE)
+        return True
+    except Exception as e:
+        st.warning(f"Decryption failed or not found. Starting fresh. ({e})")
+        return False
+
+# --- GITHUB PUSH ---
+def push_file_to_github(file_path, repo, token, branch):
+    api_url = f"https://api.github.com/repos/{repo}/contents/{file_path}"
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github+json"
+    }
+    with open(file_path, "rb") as f:
+        content = base64.b64encode(f.read()).decode("utf-8")
+    get_resp = requests.get(api_url, headers=headers)
+    if get_resp.status_code == 200:
+        sha = get_resp.json()["sha"]
+        data = {
+            "message": "Update encrypted user db",
+            "content": content,
+            "branch": branch,
+            "sha": sha
+        }
+    else:
+        data = {
+            "message": "Initial commit encrypted user db",
+            "content": content,
+            "branch": branch
+        }
+    put_resp = requests.put(api_url, headers=headers, json=data)
+    return put_resp.status_code in [200, 201]
+
+# --- DATABASE INIT ---
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+        email TEXT PRIMARY KEY,
+        password TEXT NOT NULL,
+        site TEXT NOT NULL,
+        last_login TEXT
+    )''')
+    conn.commit()
+    conn.close()
+
+# --- USER ACTIONS ---
+def register_user(email, password, site):
+    if not email.endswith(ALLOWED_DOMAIN):
+        return "Only company emails are allowed."
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT * FROM users WHERE email = ?", (email,))
+    if c.fetchone():
+        conn.close()
+        return "Email already registered."
+    hashed_pw = bcrypt.hash(password)
+    c.execute("INSERT INTO users VALUES (?, ?, ?, ?)", (email, hashed_pw, site, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    conn.commit()
+    conn.close()
+    encrypt_db(DB_PATH, ENCRYPTED_DB_PATH, ENCRYPTION_KEY)
+    push_file_to_github(ENCRYPTED_DB_PATH, GITHUB_REPO, GITHUB_TOKEN, GITHUB_BRANCH)
+    return "✅ Registered successfully."
+
+def authenticate_user(email, password):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT password, site FROM users WHERE email = ?", (email,))
+    row = c.fetchone()
+    if row and bcrypt.verify(password, row[0]):
+        c.execute("UPDATE users SET last_login = ? WHERE email = ?", (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), email))
+        conn.commit()
+        conn.close()
+        encrypt_db(DB_PATH, ENCRYPTED_DB_PATH, ENCRYPTION_KEY)
+        push_file_to_github(ENCRYPTED_DB_PATH, GITHUB_REPO, GITHUB_TOKEN, GITHUB_BRANCH)
+        return True, row[1]
+    conn.close()
+    return False, None
+
+# --- STARTUP ---
+if decrypt_db(ENCRYPTED_DB_PATH, DECRYPTED_DB_PATH, ENCRYPTION_KEY):
+    init_db()
+else:
+    init_db()
+
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
     st.session_state.user = None
+    st.session_state.site = None
 
-# Login
 if not st.session_state.authenticated:
-    st.title("🔐 Login Required")
+    st.title("🔐 Secure Inspection Dashboard")
+    tab1, tab2 = st.tabs(["Login", "Register"])
 
-    with st.form("login_form"):
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        submitted = st.form_submit_button("Login")
-
-        if submitted:
-            user_info = USER_CREDENTIALS.get(username.lower())
-            if user_info and user_info["password"] == password:
+    with tab1:
+        email = st.text_input("Email")
+        pw = st.text_input("Password", type="password")
+        if st.button("Login"):
+            ok, site = authenticate_user(email, pw)
+            if ok:
                 st.session_state.authenticated = True
-                st.session_state.user = username.lower()
+                st.session_state.user = email
+                st.session_state.site = site
+                st.success("Logged in.")
                 st.rerun()
             else:
-                st.error("Incorrect username or password.")
+                st.error("Login failed.")
 
-    st.stop()
+    with tab2:
+        new_email = st.text_input("New Email")
+        new_pw = st.text_input("New Password", type="password")
+        new_site = st.selectbox("Site", ["Indy", "Atlanta", "Chicago", "all"])
+        if st.button("Register"):
+            st.info(register_user(new_email, new_pw, new_site))
+else:
+    st.success(f"Welcome, {st.session_state.user} | Site: {st.session_state.site}")
+    if st.button("Log out"):
+        st.session_state.clear()
+        st.rerun()
 
+    site_files = {
+        "Indy": "Sorter Inspection Validation Indy.xlsx",
+        "Atlanta": "Sorter Inspection Validation Atlanta.xlsx",
+        "Chicago": "Sorter Inspection Validation Chicago.xlsx"
+    }
 
-def prepare_weekly_summary(weekly_df):
+    if st.session_state.site == "all":
+        site_choice = st.selectbox("Select site to view:", list(site_files.keys()))
+    else:
+        site_choice = st.session_state.site
+
+    file_path = f"data/Sorter Inspection Validation {site_choice}.xlsx"
+def load_excel_data(location_name, file_name):
+    full_path = os.path.join("data", file_name)
+    try:
+        weekly_df = pd.read_excel(full_path, sheet_name="Weekly Summary")
+        daily_df = pd.read_excel(full_path, sheet_name="Inspection Log")
+        return weekly_df, daily_df
+    except Exception as e:
+        st.error(f"Error loading file for {location_name}: {e}")
+        return None, None
+
     weekly_df = weekly_df.loc[:, ["Week Range", "Strands Completed", "All 8 Present"]].copy()
     weekly_df.columns = ["Week", "Strands", "Pass/Fail"]
     weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
@@ -71,7 +199,6 @@ def style_weekly_summary(df):
             styles.loc[i, "Pass/Fail"] = "background-color: lightcoral"
     return styles
 
-def prepare_weekly_heatmap(weekly_df):
     weekly_df = weekly_df.loc[:, ["Week Range", "All 8 Present"]].copy()
     weekly_df.columns = ["Week", "Pass/Fail"]
     weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
@@ -89,7 +216,6 @@ def convert_time_to_minutes(time_str):
     except:
         return 0
 
-def prepare_daily_log(daily_df):
     daily_df = daily_df.loc[:, ~daily_df.columns.str.contains("^Unnamed")]
     date_col = daily_df.columns[0]
     strand_col = daily_df.columns[1]
@@ -118,7 +244,6 @@ def highlight_by_minutes(minutes_df):
                 styles.loc[row, col] = 'background-color: lightcoral'
     return styles
 
-def style_weekly_heatmap(df):
     styles = pd.DataFrame("", index=df.index, columns=df.columns)
     for row in df.index:
         for col in df.columns:
@@ -129,70 +254,30 @@ def style_weekly_heatmap(df):
                 styles.loc[row, col] = "background-color: lightcoral"
     return styles
 
-def load_excel_data(location_name, file_name):
-    full_path = os.path.join("data", file_name)
-    try:
-        weekly_df = pd.read_excel(full_path, sheet_name="Weekly Summary")
-        daily_df = pd.read_excel(full_path, sheet_name="Inspection Log")
-        return weekly_df, daily_df
-    except Exception as e:
-        st.error(f"Error loading file for {location_name}: {e}")
-        return None, None
-
-# --- UI ---
-# Create a horizontal row: title on left, logo + logout on right
-left_col, right_col = st.columns([6, 1])  # Adjust ratios as needed
-
-with left_col:
-    st.title("Sorter Inspection Dashboard")
-
-with right_col:
-    st.image(f"data:image/png;base64,{logo_base64}", width=200)
-    st.markdown("<div style='height: 5px'></div>", unsafe_allow_html=True)  # spacing
-    if st.button("Log out", key="logout_button_right"):
-        st.session_state.authenticated = False
-        st.session_state.user = None
-        st.rerun()
-
-
-locations = {
-    "Indy": "Sorter Inspection Validation Indy.xlsx",
-    "Atlanta": "Sorter Inspection Validation Atlanta.xlsx",
-    "Chicago": "Sorter Inspection Validation Chicago.xlsx"
-}
-
-# Role-based access to locations
-locations = {
-    "Indy": "Sorter Inspection Validation Indy.xlsx",
-    "Atlanta": "Sorter Inspection Validation Atlanta.xlsx",
-    "Chicago": "Sorter Inspection Validation Chicago.xlsx"
-}
-
-user_role = st.session_state.user
-user_site = USER_CREDENTIALS[user_role]["site"]
-
-if user_site == "all":
-    site_choice = st.selectbox("Select a location to view:", list(locations.keys()))
-else:
-    site_choice = user_site
-    st.subheader(f"📍 Site: {site_choice}")
-
-file_name = locations[site_choice]
-weekly_df, daily_df = load_excel_data(site_choice, file_name)
-
-if weekly_df is not None and daily_df is not None:
-    st.header("📊 Weekly Pass/Fail")
-    heatmap_df = prepare_weekly_heatmap(weekly_df)
-    st.dataframe(heatmap_df.style.apply(style_weekly_heatmap, axis=None))
     st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
 
     st.header("📋 Weekly Overview")
-    weekly_detailed = prepare_weekly_summary(weekly_df)
-    st.dataframe(weekly_detailed.style.apply(style_weekly_summary, axis=None))
-    st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
 
-    st.header("📅 Daily Inspection Log")
-    text_pivot, numeric_pivot = prepare_daily_log(daily_df)
-    styled = text_pivot.style.apply(lambda _: highlight_by_minutes(numeric_pivot), axis=None)
-    st.dataframe(styled)
-    st.markdown("**🟩 Green** = ≥ 60 min  |  **🟨 Yellow** = 50–59 min  |  **🟥 Red** = < 50 min")
+    try:
+        st.header("📊 Weekly Heatmap Overview")
+        st.dataframe(weekly_heatmap)
+
+        st.header("📈 Weekly Summary")
+        st.dataframe(weekly_detailed.style.apply(style_weekly_summary, axis=None))
+        st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
+
+        st.header("📅 Daily Inspection Log")
+        styled = text_pivot.style.apply(lambda _: highlight_by_minutes(numeric_pivot), axis=None)
+        st.dataframe(styled)
+        st.markdown("**🟩 Green** = ≥ 60 min  |  **🟨 Yellow** = 50–59 min  |  **🟥 Red** = < 50 min")
+
+    except Exception as e:
+        st.error(f"Could not load dashboard for {site_choice}: {e}")
+
+if st.session_state.get("authenticated") and st.session_state.get("site"):
+    site_choice = st.session_state["site"]
+    file_name = SITE_FILES.get(site_choice)
+    if file_name:
+        weekly_df, daily_df = load_excel_data(site_choice, file_name)
+        if weekly_df is not None and daily_df is not None:
+            render_dashboard(site_choice, weekly_df, daily_df)
