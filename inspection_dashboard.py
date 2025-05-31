@@ -170,7 +170,6 @@ def load_excel_data(location_name, file_name):
         st.error(f"Error loading file for {location_name}: {e}")
         return None, None
 
-def prepare_weekly_summary(weekly_df):
     weekly_df = weekly_df.loc[:, ["Week Range", "Strands Completed", "All 8 Present"]].copy()
     weekly_df.columns = ["Week", "Strands", "Pass/Fail"]
     weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
@@ -193,7 +192,6 @@ def style_weekly_summary(df):
             styles.loc[i, "Pass/Fail"] = "background-color: lightcoral"
     return styles
 
-def prepare_weekly_heatmap(weekly_df):
     weekly_df = weekly_df.loc[:, ["Week Range", "All 8 Present"]].copy()
     weekly_df.columns = ["Week", "Pass/Fail"]
     weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
@@ -211,7 +209,6 @@ def convert_time_to_minutes(time_str):
     except:
         return 0
 
-def prepare_daily_log(daily_df):
     daily_df = daily_df.loc[:, ~daily_df.columns.str.contains("^Unnamed")]
     date_col = daily_df.columns[0]
     strand_col = daily_df.columns[1]
@@ -240,7 +237,6 @@ def highlight_by_minutes(minutes_df):
                 styles.loc[row, col] = 'background-color: lightcoral'
     return styles
 
-def style_weekly_heatmap(df):
     styles = pd.DataFrame("", index=df.index, columns=df.columns)
     for row in df.index:
         for col in df.columns:
@@ -251,27 +247,19 @@ def style_weekly_heatmap(df):
                 styles.loc[row, col] = "background-color: lightcoral"
     return styles
 
-if weekly_df is not None and daily_df is not None:
-    st.header("📊 Weekly Pass/Fail")
-    heatmap_df = prepare_weekly_heatmap(weekly_df)
-    st.dataframe(heatmap_df.style.apply(style_weekly_heatmap, axis=None))
     st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
 
     st.header("📋 Weekly Overview")
 
-def render_dashboard(site_choice, weekly_df, daily_df):
     try:
         st.header("📊 Weekly Heatmap Overview")
-        weekly_heatmap = prepare_weekly_heatmap(weekly_df)
         st.dataframe(weekly_heatmap)
 
         st.header("📈 Weekly Summary")
-        weekly_detailed = prepare_weekly_summary(weekly_df)
         st.dataframe(weekly_detailed.style.apply(style_weekly_summary, axis=None))
         st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
 
         st.header("📅 Daily Inspection Log")
-        text_pivot, numeric_pivot = prepare_daily_log(daily_df)
         styled = text_pivot.style.apply(lambda _: highlight_by_minutes(numeric_pivot), axis=None)
         st.dataframe(styled)
         st.markdown("**🟩 Green** = ≥ 60 min  |  **🟨 Yellow** = 50–59 min  |  **🟥 Red** = < 50 min")
@@ -279,4 +267,9 @@ def render_dashboard(site_choice, weekly_df, daily_df):
     except Exception as e:
         st.error(f"Could not load dashboard for {site_choice}: {e}")
 weekly_df, daily_df = load_excel_data(site_choice, file_name)
-render_dashboard(site_choice, weekly_df, daily_df)
+
+
+if st.session_state.get("authenticated") and site_choice and file_name:
+    weekly_df, daily_df = load_excel_data(site_choice, file_name)
+    if weekly_df is not None and daily_df is not None:
+        render_dashboard(site_choice, weekly_df, daily_df)
