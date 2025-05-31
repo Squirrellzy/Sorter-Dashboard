@@ -1,9 +1,7 @@
 
 # Decrypt user DB at runtime
 try:
-    decrypt_db(ENCRYPTED_DB_PATH, DECRYPTED_DB_PATH, st.secrets['auth']['encryption_key'])
 except Exception as e:
-    st.error('❌ Failed to decrypt user_auth.db')
     st.stop()
 
 import streamlit as st
@@ -187,6 +185,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import base64
+
+# Decrypt user DB at runtime
+try:
+    decrypt_db(ENCRYPTED_DB_PATH, DECRYPTED_DB_PATH, st.secrets['auth']['encryption_key'])
+except Exception as e:
+    st.error('❌ Failed to decrypt user_auth.db')
+    st.stop()
+
 
 # Load and encode the logo image
 logo_path = "data/logo.png"
