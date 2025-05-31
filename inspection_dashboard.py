@@ -20,6 +20,11 @@ def prepare_weekly_summary(weekly_df):
     weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
     weekly_df["Strands"] = weekly_df["Strands"].astype(str).str.strip()
     weekly_df["Pass/Fail"] = weekly_df["Pass/Fail"].astype(str).str.strip().str.title()
+
+    # Extract and parse the start date for sorting
+    weekly_df["Week_Start"] = pd.to_datetime(weekly_df["Week"].str.extract(r"^(\d{2}-\d{2}-\d{2})")[0], format="%m-%d-%y")
+    weekly_df = weekly_df.sort_values("Week_Start", ascending=False).drop(columns="Week_Start")
+
     return weekly_df[["Week", "Strands", "Pass/Fail"]]
 
 def style_weekly_summary(df):
