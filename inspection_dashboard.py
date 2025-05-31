@@ -17,8 +17,8 @@ with open(logo_path, "rb") as f:
 # Display logo in top-right corner
 st.markdown(
     f"""
-    <div style='position: absolute; top: 10px; right: 10px; z-index: 100;'>
-        <img src='data:image/png;base64,{logo_base64}' width='320'/>
+    <div style='position: absolute; top: 10px; right: 5px; z-index: 100;'>
+        <img src='data:image/png;base64,{logo_base64}' width='220'/>
     </div>
     """,
     unsafe_allow_html=True
