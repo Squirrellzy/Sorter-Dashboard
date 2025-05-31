@@ -257,7 +257,6 @@ def encrypt_db(input_file, output_file, password):
                                                                                                                                                         try:
                                                                                                                                                             h, m, s = map(int, str(time_str).split(":"))
                                                                                                                                                             return h * 60 + m + s / 60
-                                                                                                                                                        except:
                                                                                                                                                                 return 0
 
                                                                                                                                                                 def prepare_daily_log(daily_df):
@@ -279,7 +278,6 @@ def encrypt_db(input_file, output_file, password):
                                                                                                                                                                                 val = minutes_df.loc[row, col]
                                                                                                                                                                                 try:
                                                                                                                                                                                     val = float(val)
-                                                                                                                                                                                except:
                                                                                                                                                                                         continue
                                                                                                                                                                                         if val >= 60:
                                                                                                                                                                                             styles.loc[row, col] = 'background-color: lightgreen'
