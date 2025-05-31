@@ -3,11 +3,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import os
+DB_PATH = os.path.join("/tmp", "user_auth.db")
 import base64
 import sqlite3
 from passlib.hash import bcrypt
 import re
 from datetime import datetime
+
+#set page layout
+st.set_page_config(layout="wide")
 
 # --- Secure config ---
 ALLOWED_DOMAIN = st.secrets["auth"]["allowed_domain"]  # From .streamlit/secrets.toml
@@ -174,9 +179,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import base64
-
-#set page layout
-st.set_page_config(layout="wide")
 
 # Load and encode the logo image
 logo_path = "data/logo.png"
