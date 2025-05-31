@@ -52,12 +52,12 @@ def encrypt_db(input_file, output_file, password):
                             "content": content,
                             "branch": branch,
                             "sha": sha
-                            }
-                            else:
-                                data = {
+                        if sha:
+                            data = {
                                 "message": "Initial commit encrypted user db",
                                 "content": content,
                                 "branch": branch
+                            }
                                 }
                                 put_resp = requests.put(api_url, headers=headers, json=data)
                                 return put_resp.status_code in [200, 201]
