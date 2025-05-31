@@ -14,7 +14,7 @@ st.set_page_config(layout="wide")
 DB_NAME = "user_auth.db"
 ENCRYPTED_DB_PATH = "user_auth_encrypted.db"
 DECRYPTED_DB_PATH = "user_auth.db"
-ENCRYPTION_KEY = st.secrets["ENCRYPTION_KEY"]
+ENCRYPTION_KEY = st.secrets["encryption_key"]
 LOCATIONS = {
     "Indy": "Sorter Inspection Validation Indy.xlsx",
     "Atlanta": "Sorter Inspection Validation Atlanta.xlsx",
