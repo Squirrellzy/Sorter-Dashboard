@@ -278,4 +278,5 @@ def render_dashboard(site_choice, weekly_df, daily_df):
 
     except Exception as e:
         st.error(f"Could not load dashboard for {site_choice}: {e}")
+weekly_df, daily_df = load_excel_data(site_choice, file_name)
 render_dashboard(site_choice, weekly_df, daily_df)
