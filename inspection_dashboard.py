@@ -160,7 +160,6 @@ else:
         site_choice = st.session_state.site
 
     file_path = f"data/Sorter Inspection Validation {site_choice}.xlsx"
-    try:
 def load_excel_data(location_name, file_name):
     full_path = os.path.join("data", file_name)
     try:
