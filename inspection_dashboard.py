@@ -9,7 +9,7 @@ import base64
 st.set_page_config(layout="wide")
 
 # Load and encode the logo image
-logo_path = "data/logo.jpg"
+logo_path = "data/logo.png"
 with open(logo_path, "rb") as f:
     logo_data = f.read()
     logo_base64 = base64.b64encode(logo_data).decode()
