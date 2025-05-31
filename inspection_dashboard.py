@@ -141,7 +141,7 @@ def load_excel_data(location_name, file_name):
 
 # --- UI ---
 # Create a horizontal row: title on left, logo + logout on right
-left_col, right_col = st.columns([3, 1])
+left_col, right_col = st.columns([2, 1])
 
 with left_col:
     st.title("Sorter Inspection Dashboard")
