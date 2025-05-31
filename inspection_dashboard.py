@@ -14,16 +14,6 @@ with open(logo_path, "rb") as f:
     logo_data = f.read()
     logo_base64 = base64.b64encode(logo_data).decode()
 
-# Custom logo and Streamlit-native logout button
-col1, col2, col3 = st.columns([8, 1, 1])
-
-with col3:
-    st.image(f"data:image/png;base64,{logo_base64}", width=320)
-    if st.button("Log out", key="top_logout"):
-        st.session_state.authenticated = False
-        st.session_state.user = None
-        st.rerun()
-
 # User-role mapping
 USER_CREDENTIALS = {
     "admin": {"password": "retadmin", "site": "all"},
