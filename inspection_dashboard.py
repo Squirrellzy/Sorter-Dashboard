@@ -252,5 +252,21 @@ def style_weekly_heatmap(df):
                 styles.loc[row, col] = "background-color: lightcoral"
     return styles
 
+if weekly_df is not None and daily_df is not None:
+    st.header("📊 Weekly Pass/Fail")
+    heatmap_df = prepare_weekly_heatmap(weekly_df)
+    st.dataframe(heatmap_df.style.apply(style_weekly_heatmap, axis=None))
+    st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
+
+    st.header("📋 Weekly Overview")
+    weekly_detailed = prepare_weekly_summary(weekly_df)
+    st.dataframe(weekly_detailed.style.apply(style_weekly_summary, axis=None))
+    st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
+
+    st.header("📅 Daily Inspection Log")
+    text_pivot, numeric_pivot = prepare_daily_log(daily_df)
+    styled = text_pivot.style.apply(lambda _: highlight_by_minutes(numeric_pivot), axis=None)
+    st.dataframe(styled)
+    st.markdown("**🟩 Green** = ≥ 60 min  |  **🟨 Yellow** = 50–59 min  |  **🟥 Red** = < 50 min")
     except Exception as e:
         st.error(f"Could not load dashboard for {site_choice}: {e}")
