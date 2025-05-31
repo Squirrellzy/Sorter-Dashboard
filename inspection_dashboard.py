@@ -37,7 +37,7 @@ def decrypt_db(input_file, output_file, password):
     try:
         pyAesCrypt.decryptFile(input_file, output_file, password, BUFFER_SIZE)
         return True
-    except Exception as e:
+        except Exception as e:
         st.warning(f"Decryption failed or not found. Starting fresh. ({e})")
         return False
 
@@ -50,7 +50,7 @@ def push_file_to_github(file_path, repo, token, branch):
     }
     with open(file_path, "rb") as f:
         content = base64.b64encode(f.read()).decode("utf-8")
-    get_resp = requests.get(api_url, headers=headers)
+        get_resp = requests.get(api_url, headers=headers)
     if get_resp.status_code == 200:
         sha = get_resp.json()["sha"]
         data = {
@@ -65,8 +65,8 @@ def push_file_to_github(file_path, repo, token, branch):
             "content": content,
             "branch": branch
         }
-    put_resp = requests.put(api_url, headers=headers, json=data)
-    return put_resp.status_code in [200, 201]
+        put_resp = requests.put(api_url, headers=headers, json=data)
+        return put_resp.status_code in [200, 201]
 
 # --- DATABASE INIT ---
 def init_db():
@@ -85,19 +85,19 @@ def init_db():
 def register_user(email, password, site):
     if not email.endswith(ALLOWED_DOMAIN):
         return "Only company emails are allowed."
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE email = ?", (email,))
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE email = ?", (email,))
     if c.fetchone():
         conn.close()
         return "Email already registered."
-    hashed_pw = bcrypt.hash(password)
-    c.execute("INSERT INTO users VALUES (?, ?, ?, ?)", (email, hashed_pw, site, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-    conn.commit()
-    conn.close()
-    encrypt_db(DB_PATH, ENCRYPTED_DB_PATH, ENCRYPTION_KEY)
-    push_file_to_github(ENCRYPTED_DB_PATH, GITHUB_REPO, GITHUB_TOKEN, GITHUB_BRANCH)
-    return "✅ Registered successfully."
+        hashed_pw = bcrypt.hash(password)
+        c.execute("INSERT INTO users VALUES (?, ?, ?, ?)", (email, hashed_pw, site, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        conn.commit()
+        conn.close()
+        encrypt_db(DB_PATH, ENCRYPTED_DB_PATH, ENCRYPTION_KEY)
+        push_file_to_github(ENCRYPTED_DB_PATH, GITHUB_REPO, GITHUB_TOKEN, GITHUB_BRANCH)
+        return "✅ Registered successfully."
 
 def authenticate_user(email, password):
     conn = sqlite3.connect(DB_PATH)
@@ -111,8 +111,8 @@ def authenticate_user(email, password):
         encrypt_db(DB_PATH, ENCRYPTED_DB_PATH, ENCRYPTION_KEY)
         push_file_to_github(ENCRYPTED_DB_PATH, GITHUB_REPO, GITHUB_TOKEN, GITHUB_BRANCH)
         return True, row[1]
-    conn.close()
-    return False, None
+        conn.close()
+        return False, None
 
 # --- STARTUP ---
 if decrypt_db(ENCRYPTED_DB_PATH, DECRYPTED_DB_PATH, ENCRYPTION_KEY):
@@ -155,39 +155,39 @@ else:
         st.session_state.clear()
         st.rerun()
 
-    site_files = {
+        site_files = {
         "Indy": "Sorter Inspection Validation Indy.xlsx",
         "Atlanta": "Sorter Inspection Validation Atlanta.xlsx",
         "Chicago": "Sorter Inspection Validation Chicago.xlsx"
-    }
+        }
 
     if st.session_state.site == "all":
         site_choice = st.selectbox("Select site to view:", list(site_files.keys()))
     else:
         site_choice = st.session_state.site
 
-    file_path = f"data/Sorter Inspection Validation {site_choice}.xlsx"
+        file_path = f"data/Sorter Inspection Validation {site_choice}.xlsx"
 def load_excel_data(location_name, file_name):
     full_path = os.path.join("data", file_name)
     try:
         weekly_df = pd.read_excel(full_path, sheet_name="Weekly Summary")
         daily_df = pd.read_excel(full_path, sheet_name="Inspection Log")
         return weekly_df, daily_df
-    except Exception as e:
+        except Exception as e:
         st.error(f"Error loading file for {location_name}: {e}")
         return None, None
 
-    weekly_df = weekly_df.loc[:, ["Week Range", "Strands Completed", "All 8 Present"]].copy()
-    weekly_df.columns = ["Week", "Strands", "Pass/Fail"]
-    weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
-    weekly_df["Strands"] = weekly_df["Strands"].astype(str).str.strip()
-    weekly_df["Pass/Fail"] = weekly_df["Pass/Fail"].astype(str).str.strip().str.title()
+        weekly_df = weekly_df.loc[:, ["Week Range", "Strands Completed", "All 8 Present"]].copy()
+        weekly_df.columns = ["Week", "Strands", "Pass/Fail"]
+        weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
+        weekly_df["Strands"] = weekly_df["Strands"].astype(str).str.strip()
+        weekly_df["Pass/Fail"] = weekly_df["Pass/Fail"].astype(str).str.strip().str.title()
 
     # Extract and parse the start date for sorting
-    weekly_df["Week_Start"] = pd.to_datetime(weekly_df["Week"].str.extract(r"^(\d{2}-\d{2}-\d{2})")[0], format="%m-%d-%y")
-    weekly_df = weekly_df.sort_values("Week_Start", ascending=False).drop(columns="Week_Start")
+        weekly_df["Week_Start"] = pd.to_datetime(weekly_df["Week"].str.extract(r"^(\d{2}-\d{2}-\d{2})")[0], format="%m-%d-%y")
+        weekly_df = weekly_df.sort_values("Week_Start", ascending=False).drop(columns="Week_Start")
 
-    return weekly_df[["Week", "Strands", "Pass/Fail"]]
+        return weekly_df[["Week", "Strands", "Pass/Fail"]]
 
 def style_weekly_summary(df):
     styles = pd.DataFrame("", index=df.index, columns=df.columns)
@@ -197,35 +197,35 @@ def style_weekly_summary(df):
             styles.loc[i, "Pass/Fail"] = "background-color: lightgreen"
         elif isinstance(val, str) and val.lower() == "fail":
             styles.loc[i, "Pass/Fail"] = "background-color: lightcoral"
-    return styles
+            return styles
 
-    weekly_df = weekly_df.loc[:, ["Week Range", "All 8 Present"]].copy()
-    weekly_df.columns = ["Week", "Pass/Fail"]
-    weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
-    weekly_df["Pass/Fail"] = weekly_df["Pass/Fail"].astype(str).str.strip().str.title()
-    weekly_df = weekly_df.drop_duplicates(subset="Week")
-    weekly_df = weekly_df.sort_values(by="Week", ascending=False)
-    heatmap_df = pd.DataFrame([weekly_df.set_index("Week")["Pass/Fail"]])
-    heatmap_df.index = ["Status"]
-    return heatmap_df
+            weekly_df = weekly_df.loc[:, ["Week Range", "All 8 Present"]].copy()
+            weekly_df.columns = ["Week", "Pass/Fail"]
+            weekly_df["Week"] = weekly_df["Week"].astype(str).str.strip()
+            weekly_df["Pass/Fail"] = weekly_df["Pass/Fail"].astype(str).str.strip().str.title()
+            weekly_df = weekly_df.drop_duplicates(subset="Week")
+            weekly_df = weekly_df.sort_values(by="Week", ascending=False)
+            heatmap_df = pd.DataFrame([weekly_df.set_index("Week")["Pass/Fail"]])
+            heatmap_df.index = ["Status"]
+            return heatmap_df
 
 def convert_time_to_minutes(time_str):
     try:
         h, m, s = map(int, str(time_str).split(":"))
         return h * 60 + m + s / 60
-    except:
+        except:
         return 0
 
-    daily_df = daily_df.loc[:, ~daily_df.columns.str.contains("^Unnamed")]
-    date_col = daily_df.columns[0]
-    strand_col = daily_df.columns[1]
-    time_col = daily_df.columns[2]
-    daily_df["__Minutes__"] = daily_df[time_col].apply(convert_time_to_minutes)
-    text_pivot = daily_df.pivot_table(index=strand_col, columns=date_col, values=time_col, aggfunc='first')
-    numeric_pivot = daily_df.pivot_table(index=strand_col, columns=date_col, values="__Minutes__", aggfunc='sum')
-    text_pivot = text_pivot[sorted(text_pivot.columns, reverse=True)]
-    numeric_pivot = numeric_pivot[sorted(numeric_pivot.columns, reverse=True)]
-    return text_pivot.fillna(""), numeric_pivot.fillna(0)
+        daily_df = daily_df.loc[:, ~daily_df.columns.str.contains("^Unnamed")]
+        date_col = daily_df.columns[0]
+        strand_col = daily_df.columns[1]
+        time_col = daily_df.columns[2]
+        daily_df["__Minutes__"] = daily_df[time_col].apply(convert_time_to_minutes)
+        text_pivot = daily_df.pivot_table(index=strand_col, columns=date_col, values=time_col, aggfunc='first')
+        numeric_pivot = daily_df.pivot_table(index=strand_col, columns=date_col, values="__Minutes__", aggfunc='sum')
+        text_pivot = text_pivot[sorted(text_pivot.columns, reverse=True)]
+        numeric_pivot = numeric_pivot[sorted(numeric_pivot.columns, reverse=True)]
+        return text_pivot.fillna(""), numeric_pivot.fillna(0)
 
 def highlight_by_minutes(minutes_df):
     styles = pd.DataFrame("", index=minutes_df.index, columns=minutes_df.columns)
@@ -234,7 +234,7 @@ def highlight_by_minutes(minutes_df):
             val = minutes_df.loc[row, col]
             try:
                 val = float(val)
-            except:
+                except:
                 continue
             if val >= 60:
                 styles.loc[row, col] = 'background-color: lightgreen'
@@ -242,9 +242,9 @@ def highlight_by_minutes(minutes_df):
                 styles.loc[row, col] = 'background-color: khaki'
             elif val > 0:
                 styles.loc[row, col] = 'background-color: lightcoral'
-    return styles
+                return styles
 
-    styles = pd.DataFrame("", index=df.index, columns=df.columns)
+                styles = pd.DataFrame("", index=df.index, columns=df.columns)
     for row in df.index:
         for col in df.columns:
             val = df.loc[row, col]
@@ -252,11 +252,11 @@ def highlight_by_minutes(minutes_df):
                 styles.loc[row, col] = "background-color: lightgreen"
             elif isinstance(val, str) and val.lower() == "fail":
                 styles.loc[row, col] = "background-color: lightcoral"
-    return styles
+                return styles
 
-    st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
+                st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
 
-    st.header("📋 Weekly Overview")
+                st.header("📋 Weekly Overview")
 
     try:
         st.header("📊 Weekly Heatmap Overview")
@@ -271,7 +271,7 @@ def highlight_by_minutes(minutes_df):
         st.dataframe(styled)
         st.markdown("**🟩 Green** = ≥ 60 min  |  **🟨 Yellow** = 50–59 min  |  **🟥 Red** = < 50 min")
 
-    except Exception as e:
+        except Exception as e:
         st.error(f"Could not load dashboard for {site_choice}: {e}")
 
 if st.session_state.get("authenticated") and st.session_state.get("site"):
@@ -280,3 +280,4 @@ if st.session_state.get("authenticated") and st.session_state.get("site"):
     if file_name:
         weekly_df, daily_df = load_excel_data(site_choice, file_name)
         if weekly_df is not None and daily_df is not None:
+            render_dashboard(site_choice, weekly_df, daily_df)
