@@ -148,7 +148,7 @@ with left_col:
 
 with right_col:
     st.image(f"data:image/png;base64,{logo_base64}", width=200)
-    st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)  # spacing
+    st.markdown("<div style='height: 5px'></div>", unsafe_allow_html=True)  # spacing
     if st.button("Log out", key="logout_button_right"):
         st.session_state.authenticated = False
         st.session_state.user = None
