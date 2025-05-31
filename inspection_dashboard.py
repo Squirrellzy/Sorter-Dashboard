@@ -9,6 +9,8 @@ import requests
 from passlib.hash import bcrypt
 from datetime import datetime
 
+st.set_page_config(layout="wide")
+
 # --- CONFIG ---
 ENCRYPTED_DB_PATH = "user_auth.db.aes"
 DECRYPTED_DB_PATH = "/tmp/user_auth.db"
@@ -113,7 +115,6 @@ def authenticate_user(email, password):
     return False, None
 
 # --- Streamlit App ---
-st.set_page_config(layout="wide")
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
     st.session_state.user = None
