@@ -281,3 +281,71 @@ if st.session_state.get("authenticated") and st.session_state.get("site"):
         weekly_df, daily_df = load_excel_data(site_choice, file_name)
         if weekly_df is not None and daily_df is not None:
             render_dashboard(site_choice, weekly_df, daily_df)
+# --- DASHBOARD LOADER ---
+def load_excel_data(site, file_name):
+    try:
+        xls = pd.ExcelFile(file_name)
+        weekly_df = pd.read_excel(xls, "Weekly Summary")
+        daily_df = pd.read_excel(xls, "Inspection Log")
+        return weekly_df, daily_df
+    except Exception as e:
+        st.error(f"Failed to load Excel: {e}")
+        return None, None
+
+# --- DASHBOARD RENDERER ---
+def render_dashboard(site, weekly_df, daily_df):
+    st.title(f"📍 {site} - Inspection Dashboard")
+
+    st.subheader("📅 Weekly Summary")
+    st.dataframe(weekly_df, use_container_width=True)
+
+    st.subheader("📊 Daily Inspection Log")
+    st.dataframe(daily_df, use_container_width=True)
+
+# --- MAIN EXECUTION ---
+if decrypt_db(ENCRYPTED_DB_PATH, DECRYPTED_DB_PATH, ENCRYPTION_KEY):
+    init_db()
+else:
+    init_db()  # Start fresh
+
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+    st.session_state.email = ""
+    st.session_state.site = ""
+
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Font_Awesome_5_solid_user-circle.svg/1024px-Font_Awesome_5_solid_user-circle.svg.png", width=80)
+
+if not st.session_state.authenticated:
+    st.sidebar.header("🔐 Login")
+    email = st.sidebar.text_input("Email")
+    password = st.sidebar.text_input("Password", type="password")
+    if st.sidebar.button("Log In"):
+        success, site = authenticate_user(email, password)
+        if success:
+            st.session_state.authenticated = True
+            st.session_state.email = email
+            st.session_state.site = site
+            st.success("✅ Logged in")
+        else:
+            st.error("❌ Login failed")
+
+    st.sidebar.markdown("---")
+    st.sidebar.header("📝 Register")
+    new_email = st.sidebar.text_input("New Email")
+    new_password = st.sidebar.text_input("New Password", type="password")
+    site_choice = st.sidebar.selectbox("Site", list(SITE_FILES.keys()))
+    if st.sidebar.button("Create Account"):
+        message = register_user(new_email, new_password, site_choice)
+        st.sidebar.info(message)
+else:
+    st.sidebar.success(f"Logged in as {st.session_state.email}")
+    if st.sidebar.button("Log out"):
+        st.session_state.authenticated = False
+        st.rerun()
+
+    user_site = st.session_state.site
+    file_name = SITE_FILES.get(user_site)
+    weekly_df, daily_df = load_excel_data(user_site, file_name)
+
+    if weekly_df is not None and daily_df is not None:
+        render_dashboard(user_site, weekly_df, daily_df)
