@@ -37,7 +37,7 @@ st.markdown(
 )
 
 # Handle logout from top-right button
-if st.experimental_get_query_params().get("logout") or st.form_submit_button("Log out"):
+if st.query_params().get("logout") or st.form_submit_button("Log out"):
     st.session_state.authenticated = False
     st.session_state.user = None
     st.rerun()
@@ -68,23 +68,6 @@ if not st.session_state.authenticated:
         else:
             st.error("Incorrect username or password.")
     st.stop()
-
-# --- Sidebar logout ---
-st.sidebar.markdown(f"👤 Logged in as: `{st.session_state.user}`")
-if st.sidebar.button("🔁 Log out / Switch User"):
-    st.session_state.authenticated = False
-    st.session_state.user = None
-    st.rerun()
-
-def load_excel_data(location_name, file_name):
-    full_path = os.path.join("data", file_name)
-    try:
-        weekly_df = pd.read_excel(full_path, sheet_name="Weekly Summary")
-        daily_df = pd.read_excel(full_path, sheet_name="Inspection Log")
-        return weekly_df, daily_df
-    except Exception as e:
-        st.error(f"Error loading file for {location_name}: {e}")
-        return None, None
 
 def prepare_weekly_summary(weekly_df):
     weekly_df = weekly_df.loc[:, ["Week Range", "Strands Completed", "All 8 Present"]].copy()
