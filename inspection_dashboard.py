@@ -33,23 +33,25 @@ USER_CREDENTIALS = {
 }
 
 # Login
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-    st.session_state.user = None
-
 if not st.session_state.authenticated:
     st.title("🔐 Login Required")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    if st.button("Login"):
-        user_info = USER_CREDENTIALS.get(username.lower())
-        if user_info and user_info["password"] == password:
-            st.session_state.authenticated = True
-            st.session_state.user = username.lower()
-            st.rerun()
-        else:
-            st.error("Incorrect username or password.")
+
+    with st.form("login_form"):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Login")
+
+        if submitted:
+            user_info = USER_CREDENTIALS.get(username.lower())
+            if user_info and user_info["password"] == password:
+                st.session_state.authenticated = True
+                st.session_state.user = username.lower()
+                st.rerun()
+            else:
+                st.error("Incorrect username or password.")
+
     st.stop()
+
 
 def prepare_weekly_summary(weekly_df):
     weekly_df = weekly_df.loc[:, ["Week Range", "Strands Completed", "All 8 Present"]].copy()
