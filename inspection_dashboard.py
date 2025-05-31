@@ -266,10 +266,11 @@ def highlight_by_minutes(minutes_df):
 
     except Exception as e:
         st.error(f"Could not load dashboard for {site_choice}: {e}")
-weekly_df, daily_df = load_excel_data(site_choice, file_name)
 
-
-if st.session_state.get("authenticated") and site_choice and file_name:
-    weekly_df, daily_df = load_excel_data(site_choice, file_name)
-    if weekly_df is not None and daily_df is not None:
-        render_dashboard(site_choice, weekly_df, daily_df)
+if st.session_state.get("authenticated") and st.session_state.get("site"):
+    site_choice = st.session_state["site"]
+    file_name = SITE_FILES.get(site_choice)
+    if file_name:
+        weekly_df, daily_df = load_excel_data(site_choice, file_name)
+        if weekly_df is not None and daily_df is not None:
+            render_dashboard(site_choice, weekly_df, daily_df)
