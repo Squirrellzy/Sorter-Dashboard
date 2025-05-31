@@ -9,8 +9,6 @@ import requests
 from passlib.hash import bcrypt
 from datetime import datetime
 
-st.set_page_config(layout="wide")
-
 # --- CONFIG ---
 ENCRYPTED_DB_PATH = "user_auth.db.aes"
 DECRYPTED_DB_PATH = "/tmp/user_auth.db"
@@ -20,6 +18,9 @@ GITHUB_REPO = st.secrets["auth"]["github_repo"]
 GITHUB_BRANCH = st.secrets["auth"].get("github_branch", "main")
 ALLOWED_DOMAIN = st.secrets["auth"]["allowed_domain"]
 DB_PATH = DECRYPTED_DB_PATH
+
+# --- Streamlit Setup ---
+st.set_page_config(layout="wide")
 
 # --- AES Encrypt/Decrypt ---
 def encrypt_db(input_file, output_file, password):
@@ -114,14 +115,14 @@ def authenticate_user(email, password):
     conn.close()
     return False, None
 
-# --- Streamlit App ---
+# --- Login UI ---
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
     st.session_state.user = None
     st.session_state.site = None
 
-# UI
-st.markdown("## 🔐 Login")
+st.title("🔐 Secure Inspection Dashboard")
+
 tab1, tab2 = st.tabs(["Login", "Register"])
 
 with tab1:
@@ -145,9 +146,42 @@ with tab2:
     if st.button("Register"):
         st.info(register_user(new_email, new_pw, new_site))
 
-# Post-login dashboard
+# --- Dashboards ---
 if st.session_state.authenticated:
     st.success(f"Welcome, {st.session_state.user} | Site: {st.session_state.site}")
     st.button("Log out", on_click=lambda: st.session_state.clear())
     st.markdown("---")
-    st.write("📊 Site-specific dashboards will appear here.")
+
+    files = {
+        "Indy": "Sorter Inspection Validation Indy.xlsx",
+        "Atlanta": "Sorter Inspection Validation Atlanta.xlsx",
+        "Chicago": "Sorter Inspection Validation Chicago.xlsx"
+    }
+
+    selected_site = st.session_state.site
+    file_name = files.get(selected_site)
+
+    if not file_name:
+        st.error("No file configured for your site.")
+    else:
+        file_path = os.path.join("data", file_name)
+        try:
+            weekly_df = pd.read_excel(file_path, sheet_name="Weekly Summary")
+            daily_df = pd.read_excel(file_path, sheet_name="Inspection Log")
+
+            st.subheader("📊 Weekly Pass/Fail")
+            weekly_df["Week"] = weekly_df["Week Range"]
+            weekly_df["Status"] = weekly_df["All 8 Present"].apply(lambda x: "Pass" if str(x).lower() == "yes" else "Fail")
+            heatmap = pd.DataFrame([weekly_df.set_index("Week")["Status"]])
+            st.dataframe(heatmap.style.applymap(lambda v: "background-color: lightgreen" if v == "Pass" else "background-color: lightcoral"))
+
+            st.subheader("📋 Weekly Overview")
+            st.dataframe(weekly_df[["Week Range", "Strands Completed", "All 8 Present"]])
+
+            st.subheader("📅 Daily Inspection Log")
+            daily_df["__Minutes__"] = daily_df.iloc[:, 2].apply(lambda t: sum(int(x) * 60 ** i for i, x in enumerate(reversed(str(t).split(':')))))
+            view = daily_df.pivot_table(index=daily_df.columns[1], columns=daily_df.columns[0], values="__Minutes__", aggfunc="sum").fillna(0)
+            style = view.applymap(lambda v: "background-color: lightgreen" if v >= 60 else "background-color: khaki" if v >= 50 else "background-color: lightcoral" if v > 0 else "")
+            st.dataframe(view.style.applymap(lambda v: "background-color: lightgreen" if v >= 60 else "background-color: khaki" if v >= 50 else "background-color: lightcoral" if v > 0 else ""))
+        except Exception as e:
+            st.error(f"Failed to load Excel file for site '{selected_site}': {e}")
