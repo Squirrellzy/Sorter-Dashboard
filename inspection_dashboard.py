@@ -274,6 +274,40 @@ def highlight_by_minutes(minutes_df):
     except Exception as e:
         st.error(f"Could not load dashboard for {site_choice}: {e}")
 
+
+# --- DASHBOARD VIEW ---
+def render_dashboard(site_choice, weekly_df, daily_df):
+    try:
+        st.header("📊 Weekly Heatmap Overview")
+        weekly_df_heat = weekly_df.loc[:, ["Week", "Pass/Fail"]].copy()
+        weekly_df_heat = weekly_df_heat.drop_duplicates(subset="Week")
+        weekly_df_heat = weekly_df_heat.sort_values(by="Week", ascending=False)
+        heatmap_df = pd.DataFrame([weekly_df_heat.set_index("Week")["Pass/Fail"]])
+        heatmap_df.index = ["Status"]
+        st.dataframe(heatmap_df.style.apply(style_weekly_summary, axis=None))
+
+        st.header("📈 Weekly Summary")
+        st.dataframe(weekly_df.style.apply(style_weekly_summary, axis=None))
+        st.markdown("**🟩 Pass** = All 8 strands inspected during the week  |  **🟥 Fail** = One or more strands missing")
+
+        st.header("📅 Daily Inspection Log")
+        daily_df = daily_df.loc[:, ~daily_df.columns.str.contains("^Unnamed")]
+        date_col = daily_df.columns[0]
+        strand_col = daily_df.columns[1]
+        time_col = daily_df.columns[2]
+        daily_df["__Minutes__"] = daily_df[time_col].apply(convert_time_to_minutes)
+        text_pivot = daily_df.pivot_table(index=strand_col, columns=date_col, values=time_col, aggfunc='first')
+        numeric_pivot = daily_df.pivot_table(index=strand_col, columns=date_col, values="__Minutes__", aggfunc='sum')
+        text_pivot = text_pivot[sorted(text_pivot.columns, reverse=True)]
+        numeric_pivot = numeric_pivot[sorted(numeric_pivot.columns, reverse=True)]
+        styled = text_pivot.fillna("").style.apply(lambda _: highlight_by_minutes(numeric_pivot), axis=None)
+        st.dataframe(styled)
+        st.markdown("**🟩 Green** = ≥ 60 min  |  **🟨 Yellow** = 50–59 min  |  **🟥 Red** = < 50 min")
+
+    except Exception as e:
+        st.error(f"Could not load dashboard for {site_choice}: {e}")
+
+# --- MAIN VIEW ---
 if st.session_state.get("authenticated") and st.session_state.get("site"):
     site_choice = st.session_state["site"]
     file_name = SITE_FILES.get(site_choice)
