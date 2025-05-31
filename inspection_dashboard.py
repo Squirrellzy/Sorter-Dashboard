@@ -28,7 +28,7 @@ def encrypt_db(input_file, output_file, password):
 
 def decrypt_db(input_file, output_file, password):
     buffer_size = 64 * 1024
-        try:
+    try:
         pyAesCrypt.decryptFile(input_file, output_file, password, buffer_size)
         return True
     except Exception as e:
