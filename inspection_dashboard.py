@@ -44,23 +44,24 @@ def encrypt_db(input_file, output_file, password):
                     }
                     with open(file_path, "rb") as f:
                         content = base64.b64encode(f.read()).decode("utf-8")
-                        get_resp = requests.get(api_url, headers=headers)
-                        if get_resp.status_code == 200:
-                            sha = get_resp.json()["sha"]
-                            data = {
-                            "message": "Update encrypted user db",
-                            "content": content,
-                            "branch": branch,
-                            "sha": sha
-                        if sha:
-                            data = {
-                                "message": "Initial commit encrypted user db",
-                                "content": content,
-                                "branch": branch
-                            }
-                                }
-                                put_resp = requests.put(api_url, headers=headers, json=data)
-                                return put_resp.status_code in [200, 201]
+        content = base64.b64encode(f.read()).decode("utf-8")
+        get_resp = requests.get(api_url, headers=headers)
+        if get_resp.status_code == 200:
+            sha = get_resp.json()["sha"]
+            data = {
+                "message": "Update encrypted user db",
+                "content": content,
+                "branch": branch,
+                "sha": sha
+            }
+        else:
+            data = {
+                "message": "Initial commit encrypted user db",
+                "content": content,
+                "branch": branch
+            }
+        put_resp = requests.put(api_url, headers=headers, json=data)
+        return put_resp.status_code in [200, 201]
 
                                 # Decrypt if available
                                 decrypt_db(ENCRYPTED_DB_PATH, DECRYPTED_DB_PATH, ENCRYPTION_KEY)
