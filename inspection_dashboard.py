@@ -4,6 +4,19 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
+st.set_page_config(layout="wide")
+
+# Add logo in the top right
+logo_path = "data/logo.jpg"
+st.markdown(
+    f"""
+    <div style='position: absolute; top: 10px; right: 10px;'>
+        <img src='data:image/png;base64,{open(logo_path, "rb").read().encode("base64").decode()}' width='120'/>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 def load_excel_data(location_name, file_name):
     full_path = os.path.join("data", file_name)
     try:
