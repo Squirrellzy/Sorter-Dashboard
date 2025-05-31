@@ -24,6 +24,39 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# User-role mapping
+USER_CREDENTIALS = {
+    "admin": {"password": "retadmin", "site": "all"},
+    "indy": {"password": "mars", "site": "Indy"},
+    "atlanta": {"password": "mars", "site": "Atlanta"},
+    "chicago": {"password": "mars", "site": "Chicago"},
+}
+
+# Login
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+    st.session_state.user = None
+
+if not st.session_state.authenticated:
+    st.title("🔐 Login Required")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    if st.button("Login"):
+        user_info = USER_CREDENTIALS.get(username.lower())
+        if user_info and user_info["password"] == password:
+            st.session_state.authenticated = True
+            st.session_state.user = username.lower()
+            st.rerun()
+        else:
+            st.error("Incorrect username or password.")
+    st.stop()
+
+# --- Sidebar logout ---
+st.sidebar.markdown(f"👤 Logged in as: `{st.session_state.user}`")
+if st.sidebar.button("🔁 Log out / Switch User"):
+    st.session_state.authenticated = False
+    st.session_state.user = None
+    st.rerun()
 
 def load_excel_data(location_name, file_name):
     full_path = os.path.join("data", file_name)
@@ -125,7 +158,22 @@ locations = {
     "Chicago": "Sorter Inspection Validation Chicago.xlsx"
 }
 
-site_choice = st.selectbox("Select a location to view:", list(locations.keys()))
+# Role-based access to locations
+locations = {
+    "Indy": "Sorter Inspection Validation Indy.xlsx",
+    "Atlanta": "Sorter Inspection Validation Atlanta.xlsx",
+    "Chicago": "Sorter Inspection Validation Chicago.xlsx"
+}
+
+user_role = st.session_state.user
+user_site = USER_CREDENTIALS[user_role]["site"]
+
+if user_site == "all":
+    site_choice = st.selectbox("Select a location to view:", list(locations.keys()))
+else:
+    site_choice = user_site
+    st.subheader(f"📍 Site: {site_choice}")
+
 file_name = locations[site_choice]
 weekly_df, daily_df = load_excel_data(site_choice, file_name)
 
