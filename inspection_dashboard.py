@@ -18,8 +18,8 @@ with open(logo_path, "rb") as f:
 col1, col2, col3 = st.columns([8, 1, 1])
 
 with col3:
-    st.image(f"data:image/png;base64,{logo_base64}", width=220)
-    if st.button("🔁 Log out", key="top_logout"):
+    st.image(f"data:image/png;base64,{logo_base64}", width=320)
+    if st.button("Log out", key="top_logout"):
         st.session_state.authenticated = False
         st.session_state.user = None
         st.rerun()
