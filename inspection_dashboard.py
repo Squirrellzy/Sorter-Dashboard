@@ -3,19 +3,27 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import base64
 
+#set page layout
 st.set_page_config(layout="wide")
 
-# Add logo in the top right
+# Load and encode the logo image
 logo_path = "data/logo.jpg"
+with open(logo_path, "rb") as f:
+    logo_data = f.read()
+    logo_base64 = base64.b64encode(logo_data).decode()
+
+# Display logo in top-right corner
 st.markdown(
     f"""
-    <div style='position: absolute; top: 10px; right: 10px;'>
-        <img src='data:image/png;base64,{open(logo_path, "rb").read().encode("base64").decode()}' width='120'/>
+    <div style='position: absolute; top: 10px; right: 10px; z-index: 100;'>
+        <img src='data:image/png;base64,{logo_base64}' width='120'/>
     </div>
     """,
     unsafe_allow_html=True
 )
+
 
 def load_excel_data(location_name, file_name):
     full_path = os.path.join("data", file_name)
