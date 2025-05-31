@@ -132,6 +132,16 @@ def style_weekly_heatmap(df):
                 styles.loc[row, col] = "background-color: lightcoral"
     return styles
 
+def load_excel_data(location_name, file_name):
+    full_path = os.path.join("data", file_name)
+    try:
+        weekly_df = pd.read_excel(full_path, sheet_name="Weekly Summary")
+        daily_df = pd.read_excel(full_path, sheet_name="Inspection Log")
+        return weekly_df, daily_df
+    except Exception as e:
+        st.error(f"Error loading file for {location_name}: {e}")
+        return None, None
+
 # --- UI ---
 st.title("Sorter Inspection Dashboard")
 
