@@ -280,4 +280,3 @@ if st.session_state.get("authenticated") and st.session_state.get("site"):
     if file_name:
         weekly_df, daily_df = load_excel_data(site_choice, file_name)
         if weekly_df is not None and daily_df is not None:
-            render_dashboard(site_choice, weekly_df, daily_df)
