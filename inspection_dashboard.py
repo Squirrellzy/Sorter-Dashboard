@@ -14,15 +14,33 @@ with open(logo_path, "rb") as f:
     logo_data = f.read()
     logo_base64 = base64.b64encode(logo_data).decode()
 
-# Display logo in top-right corner
+# Custom HTML for logo and logout button in top-right corner
 st.markdown(
     f"""
-    <div style='position: absolute; top: 10px; right: 5px; z-index: 100;'>
+    <div style='position: absolute; top: 10px; right: 5px; z-index: 100; text-align: center;'>
         <img src='data:image/png;base64,{logo_base64}' width='220'/>
+        <form action="" method="post">
+            <input type="submit" name="logout" value="Log out" style="
+                margin-top: 10px;
+                background-color: #e74c3c;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                font-size: 14px;
+                border-radius: 6px;
+                cursor: pointer;
+            "/>
+        </form>
     </div>
     """,
     unsafe_allow_html=True
 )
+
+# Handle logout from top-right button
+if st.experimental_get_query_params().get("logout") or st.form_submit_button("Log out"):
+    st.session_state.authenticated = False
+    st.session_state.user = None
+    st.rerun()
 
 # User-role mapping
 USER_CREDENTIALS = {
