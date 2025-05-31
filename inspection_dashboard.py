@@ -30,8 +30,10 @@ if "authenticated" not in st.session_state:
 # Login
 if not st.session_state.authenticated:
     st.title("🔐 Login Required")
-    with right_col:
-        st.image(f"data:image/png;base64,{logo_base64}", width=200)
+    
+with right_col:
+st.image(f"data:image/png;base64,{logo_base64}", width=200)
+
     with st.form("login_form"):
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
