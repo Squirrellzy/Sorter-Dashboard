@@ -28,7 +28,7 @@ def encrypt_db(input_file, output_file, password):
 
 def decrypt_db(input_file, output_file, password):
     buffer_size = 64 * 1024
-    try:
+        try:
         pyAesCrypt.decryptFile(input_file, output_file, password, buffer_size)
         return True
     except Exception as e:
@@ -147,6 +147,7 @@ with tab2:
 
 # --- Dashboards ---
 if st.session_state.authenticated:
+    # 🔒 User is authenticated, show dashboards
     st.success(f"Welcome, {st.session_state.user} | Site: {st.session_state.site}")
     if st.button("Log out"):
         st.session_state.clear()
@@ -164,13 +165,13 @@ if st.session_state.authenticated:
         site_choice = st.session_state.site
 
     file_path = f"data/Sorter Inspection Validation {site_choice}.xlsx"
-    try:
+        try:
         weekly_df = pd.read_excel(file_path, sheet_name="Weekly Summary")
         daily_df = pd.read_excel(file_path, sheet_name="Inspection Log")
 
-        st.markdown("### ✅ Weekly Summary")
-        st.dataframe(weekly_df)
-
+            st.markdown("### ✅ Weekly Summary")
+            st.dataframe(weekly_df)
+    
         st.markdown("### 📅 Daily Inspection Log")
         daily_df["Duration (minutes)"] = daily_df.iloc[:, 2].apply(
             lambda t: sum(int(x) * 60 ** i for i, x in enumerate(reversed(str(t).split(':'))))
@@ -210,7 +211,7 @@ st.markdown(
 
 def load_excel_data(location_name, file_name):
     full_path = os.path.join("data", file_name)
-    try:
+        try:
         weekly_df = pd.read_excel(full_path, sheet_name="Weekly Summary")
         daily_df = pd.read_excel(full_path, sheet_name="Inspection Log")
         return weekly_df, daily_df
@@ -253,7 +254,7 @@ def prepare_weekly_heatmap(weekly_df):
     return heatmap_df
 
 def convert_time_to_minutes(time_str):
-    try:
+        try:
         h, m, s = map(int, str(time_str).split(":"))
         return h * 60 + m + s / 60
     except:
@@ -276,7 +277,7 @@ def highlight_by_minutes(minutes_df):
     for row in styles.index:
         for col in styles.columns:
             val = minutes_df.loc[row, col]
-            try:
+                try:
                 val = float(val)
             except:
                 continue
