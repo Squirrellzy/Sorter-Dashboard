@@ -32,6 +32,11 @@ USER_CREDENTIALS = {
     "chicago": {"password": "mars", "site": "Chicago"},
 }
 
+# Initialize session state variables if not already set
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+    st.session_state.user = None
+
 # Login
 if not st.session_state.authenticated:
     st.title("🔐 Login Required")
@@ -52,10 +57,6 @@ if not st.session_state.authenticated:
 
     st.stop()
 
-# Initialize session state variables if not already set
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-    st.session_state.user = None
 
 def prepare_weekly_summary(weekly_df):
     weekly_df = weekly_df.loc[:, ["Week Range", "Strands Completed", "All 8 Present"]].copy()
