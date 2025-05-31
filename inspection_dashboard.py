@@ -4,6 +4,24 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
+st.set_page_config(layout="wide")
+
+# Simple login system
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if not st.session_state.authenticated:
+    st.title("🔐 Login Required")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    if st.button("Login"):
+        if username == "maint" and password == "mars":
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("Incorrect username or password.")
+    st.stop()
+    
 def load_excel_data(location_name, file_name):
     full_path = os.path.join("data", file_name)
     try:
