@@ -8,6 +8,13 @@ import requests
 from passlib.hash import bcrypt
 from datetime import datetime
 
+# Mapping of site to Excel filenames
+SITE_FILES = {
+    "Indy": "Sorter Inspection Validation Indy.xlsx",
+    "Chicago": "Sorter Inspection Validation Chicago.xlsx",
+    "Atlanta": "Sorter Inspection Validation Atlanta.xlsx"
+}
+
 # --- CONFIG ---
 st.set_page_config(layout="wide")
 
