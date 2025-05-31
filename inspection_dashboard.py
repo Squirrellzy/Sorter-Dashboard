@@ -33,7 +33,13 @@ if not st.session_state.authenticated:
             st.error("Incorrect username or password.")
     st.stop()
 
-    
+# --- Sidebar logout ---
+st.sidebar.markdown(f"👤 Logged in as: `{st.session_state.user}`")
+if st.sidebar.button("🔁 Log out / Switch User"):
+    st.session_state.authenticated = False
+    st.session_state.user = None
+    st.rerun()
+
 def load_excel_data(location_name, file_name):
     full_path = os.path.join("data", file_name)
     try:
