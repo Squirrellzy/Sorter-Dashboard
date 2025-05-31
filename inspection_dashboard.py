@@ -15,7 +15,7 @@ with open(logo_path, "rb") as f:
     logo_base64 = base64.b64encode(logo_data).decode()
 
 # Custom logo and Streamlit-native logout button
-col1, col2, col3 = st.columns([8, 1, 1])
+col1, col2, col3 = st.columns([12, 8, 1])
 
 with col3:
     st.image(f"data:image/png;base64,{logo_base64}", width=320)
