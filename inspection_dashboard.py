@@ -31,7 +31,7 @@ def encrypt_db(input_file, output_file, password):
         try:
             pyAesCrypt.decryptFile(input_file, output_file, password, buffer_size)
             return True
-            except Exception as e:
+        except Exception as e:
                 st.warning(f"Decryption failed or not found. Starting fresh. ({e})")
                 return False
 
@@ -184,7 +184,7 @@ def encrypt_db(input_file, output_file, password):
                                                                                                         , subset=["Duration (minutes)"])
                                                                                                         st.dataframe(styled)
 
-                                                                                                        except Exception as e:
+                                                                                                    except Exception as e:
                                                                                                             st.error(f"Could not load dashboard for {site_choice}: {e}")
 
 
@@ -215,7 +215,7 @@ def encrypt_db(input_file, output_file, password):
                                                                                                                         weekly_df = pd.read_excel(full_path, sheet_name="Weekly Summary")
                                                                                                                         daily_df = pd.read_excel(full_path, sheet_name="Inspection Log")
                                                                                                                         return weekly_df, daily_df
-                                                                                                                        except Exception as e:
+                                                                                                                    except Exception as e:
                                                                                                                             st.error(f"Error loading file for {location_name}: {e}")
                                                                                                                             return None, None
 
@@ -257,7 +257,7 @@ def encrypt_db(input_file, output_file, password):
                                                                                                                                                         try:
                                                                                                                                                             h, m, s = map(int, str(time_str).split(":"))
                                                                                                                                                             return h * 60 + m + s / 60
-                                                                                                                                                            except:
+                                                                                                                                                        except:
                                                                                                                                                                 return 0
 
                                                                                                                                                                 def prepare_daily_log(daily_df):
@@ -279,7 +279,7 @@ def encrypt_db(input_file, output_file, password):
                                                                                                                                                                                 val = minutes_df.loc[row, col]
                                                                                                                                                                                 try:
                                                                                                                                                                                     val = float(val)
-                                                                                                                                                                                    except:
+                                                                                                                                                                                except:
                                                                                                                                                                                         continue
                                                                                                                                                                                         if val >= 60:
                                                                                                                                                                                             styles.loc[row, col] = 'background-color: lightgreen'
