@@ -141,17 +141,19 @@ def load_excel_data(location_name, file_name):
 
 # --- UI ---
 # Create a horizontal row: title on left, logo + logout on right
-left_col, right_col = st.columns([2, 1])
+left_col, right_col = st.columns([6, 1])  # Adjust ratios as needed
 
 with left_col:
     st.title("Sorter Inspection Dashboard")
 
 with right_col:
     st.image(f"data:image/png;base64,{logo_base64}", width=200)
-    if st.button("Log out", key="top_logout"):
+    st.markdown("<div style='height: 10px'></div>", unsafe_allow_html=True)  # spacing
+    if st.button("Log out", key="logout_button_right"):
         st.session_state.authenticated = False
         st.session_state.user = None
         st.rerun()
+
 
 locations = {
     "Indy": "Sorter Inspection Validation Indy.xlsx",
