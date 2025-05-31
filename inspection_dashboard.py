@@ -150,6 +150,8 @@ else:
     site_choice = user_site
     st.subheader(f"📍 Site: {site_choice}")
 
+file_name = locations[site_choice]
+weekly_df, daily_df = load_excel_data(site_choice, file_name)
 
 if weekly_df is not None and daily_df is not None:
     st.header("📊 Weekly Pass/Fail")
