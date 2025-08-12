@@ -97,9 +97,9 @@ def highlight_by_minutes(minutes_df):
                 val = float(val)
             except:
                 continue
-            if val >= 60:
+            if val >= 55:
                 styles.loc[row, col] = 'background-color: lightgreen'
-            elif 50 <= val < 60:
+            elif 45 <= val < 55:
                 styles.loc[row, col] = 'background-color: khaki'
             elif val > 0:
                 styles.loc[row, col] = 'background-color: lightcoral'
@@ -144,4 +144,4 @@ if weekly_df is not None and daily_df is not None:
     text_pivot, numeric_pivot = prepare_daily_log(daily_df)
     styled = text_pivot.style.apply(lambda _: highlight_by_minutes(numeric_pivot), axis=None)
     st.dataframe(styled)
-    st.markdown("**🟩 Green** = ≥ 60 min  |  **🟨 Yellow** = 50–59 min  |  **🟥 Red** = < 50 min")
+    st.markdown("**🟩 Green** = ≥ 55 min  |  **🟨 Yellow** = 55–45 min  |  **🟥 Red** = < 45 min")
